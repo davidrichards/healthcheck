@@ -1,0 +1,31 @@
+@startuml healthcheck_sequence_design_1
+
+title System Sequence Diagram
+
+actor User as U
+participant RailsApp as RA
+participant S3
+participant FlatBuffers as FB
+participant Kinesis
+participant Worker as W
+
+U -> RA: POST /services/refresh
+RA -> S3: Fetch services list
+S3 --> RA: Return services list
+RA -> FB: Serialize services list to FlatBuffer
+FB --> RA: FlatBuffer created
+RA -> Kinesis: Publish FlatBuffer to event stream
+Kinesis --> RA: Acknowledgment
+
+... Worker Logic ...
+RA -> W: Start worker with FlatBuffer pointer and TTL
+loop Until TTL expires
+    W -> FB: Read assigned span of services
+    FB --> W: Return span data
+    W -> RA: Report service status (healthy/failed/unchecked)
+    W -> Kinesis: Dispatch bundling results
+end
+W -> RA: Final status and bundling summary
+
+@enduml
+
