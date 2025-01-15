@@ -2,6 +2,8 @@
 
 title System Sequence Diagram
 
+skinparam actorStyle awesome
+
 actor User as U
 participant RailsApp as RA
 participant S3
